@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Building - Santo Domingo 2036</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#0a0e1a;font-family:'Inter',sans-serif}
+canvas{display:block}
+#sim-nav{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:500}
+#sim-nav select{background:rgba(0,30,60,.9);color:#0ef;border:1px solid rgba(0,180,255,.4);padding:10px 15px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;outline:none;box-shadow:0 0 15px rgba(0,150,255,.2);backdrop-filter:blur(8px);font-family:inherit;transition:all .3s}
+#sim-nav select:hover{border-color:#0ef;box-shadow:0 0 20px rgba(0,200,255,.4)}
+#sim-nav select option{background:#0a1a3a;color:#fff}
+#hud-left{position:fixed;top:80px;left:20px;z-index:10;pointer-events:none;width:240px;color:#c8daf0;font-size:11px}
+#hud-left h2{font-size:16px;color:#0ef;margin-bottom:8px;text-shadow:0 0 12px #0af}
+.card{background:rgba(8,16,35,.85);border:1px solid rgba(0,150,255,.25);border-radius:8px;padding:10px;margin-bottom:8px;backdrop-filter:blur(6px)}
+.card h3{font-size:10px;color:#4af;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.floor-row{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:10px}
+.floor-dot{width:8px;height:8px;border-radius:50%;animation:pulse 2s infinite}
+.floor-dot.ok{background:#0f8;box-shadow:0 0 6px #0f8}
+.floor-dot.warn{background:#fa0;box-shadow:0 0 6px #fa0}
+.floor-dot.off{background:#444}
+.floor-label{flex:1}
+.floor-val{color:#fff;font-weight:600}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.2)}}
+.hvac-stat{display:flex;justify-content:space-between;padding:3px 0;font-size:10px}
+.hvac-val{color:#0cf;font-weight:600}
+.bar-container{height:6px;background:rgba(0,50,100,.4);border-radius:3px;margin:4px 0}
+.bar-fill{height:100%;border-radius:3px;transition:width 1s}
+#hud-right{position:fixed;top:80px;right:20px;z-index:10;pointer-events:none;width:220px;color:#c8daf0;font-size:11px}
+.energy-score{text-align:center;padding:15px}
+.score-circle{width:90px;height:90px;border-radius:50%;border:4px solid #0f8;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;flex-direction:column;position:relative;box-shadow:0 0 20px rgba(0,255,136,.2)}
+.score-val{font-size:32px;font-weight:700;color:#0f8}
+.score-label{font-size:8px;color:#68a;text-transform:uppercase;letter-spacing:1px}
+.score-grade{font-size:24px;font-weight:700;color:#0f8;margin-top:4px}
+.sun-info{display:flex;justify-content:space-between;font-size:10px;padding:3px 0}
+.sun-val{color:#ffa;font-weight:600}
+#time-slider{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:10;display:flex;align-items:center;gap:12px;background:rgba(8,16,35,.85);border:1px solid rgba(0,150,255,.25);border-radius:10px;padding:10px 20px;backdrop-filter:blur(6px)}
+#time-slider label{color:#4af;font-size:11px;font-weight:600}
+#time-slider input[type=range]{width:200px;accent-color:#0ef}
+#time-slider .time-val{color:#0ef;font-size:13px;font-weight:700;min-width:50px;text-align:center}
+#controls-hint{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.4);font-size:11px;z-index:10;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="sim-nav">
+  <select onchange="if(this.value) window.location.href=this.value">
+    <option value="building.html">🏢 Smart Building Facade</option>
+    <option value="index.html">🏙️ Vista General Ciudad 3D</option>
+    <option value="dashboard.html">💧 Smart Water Network Control Center</option>
+  </select>
+</div>
+
+<div id="hud-left">
+  <h2>🏢 Smart Building SD-2036</h2>
+  <div class="card">
+    <h3>📡 IoT Sensors by Floor</h3>
+    <div id="floorList"></div>
+  </div>
+  <div class="card">
+    <h3>❄️ HVAC System</h3>
+    <div class="hvac-stat"><span>Supply Air Temp</span><span class="hvac-val" id="hvacSupply">18.5°C</span></div>
+    <div class="hvac-stat"><span>Return Air Temp</span><span class="hvac-val" id="hvacReturn">23.2°C</span></div>
+    <div class="hvac-stat"><span>Fan Speed</span><span class="hvac-val" id="hvacFan">72%</span></div>
+    <div class="bar-container"><div class="bar-fill" id="hvacBar" style="width:72%;background:linear-gradient(90deg,#0af,#0f8)"></div></div>
+    <div class="hvac-stat"><span>Chiller Load</span><span class="hvac-val" id="hvacChiller">65%</span></div>
+    <div class="bar-container"><div class="bar-fill" id="chillerBar" style="width:65%;background:linear-gradient(90deg,#0cf,#0af)"></div></div>
+  </div>
+</div>
+
+<div id="hud-right">
+  <div class="card energy-score">
+    <h3>⚡ Energy Efficiency</h3>
+    <div class="score-circle"><span class="score-val" id="scoreVal">92</span><span class="score-label">Score</span></div>
+    <div class="score-grade" id="scoreGrade">A+</div>
+    <div style="font-size:9px;color:#68a;margin-top:4px">LEED Platinum Certified</div>
+  </div>
+  <div class="card">
+    <h3>☀️ Solar Data</h3>
+    <div class="sun-info"><span>Azimuth</span><span class="sun-val" id="sunAz">145°</span></div>
+    <div class="sun-info"><span>Elevation</span><span class="sun-val" id="sunEl">62°</span></div>
+    <div class="sun-info"><span>Irradiance</span><span class="sun-val" id="sunIrr">780 W/m²</span></div>
+    <div class="sun-info"><span>Window Tint</span><span class="sun-val" id="winTint">42%</span></div>
+  </div>
+  <div class="card">
+    <h3>🔋 Power Consumption</h3>
+    <div class="hvac-stat"><span>Current</span><span class="hvac-val">124 kW</span></div>
+    <div class="hvac-stat"><span>Solar Gen</span><span class="hvac-val" style="color:#0f8">48 kW</span></div>
+    <div class="hvac-stat"><span>Net Grid</span><span class="hvac-val">76 kW</span></div>
+  </div>
+</div>
+
+<div id="time-slider">
+  <label>☀️ Sun Position</label>
+  <input type="range" id="sunSlider" min="0" max="100" value="50" oninput="updateSunPos(this.value)">
+  <span class="time-val" id="timeLabel">12:00</span>
+</div>
+<div id="controls-hint">🖱️ Rotar · Scroll Zoom · Click derecho Mover</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+let scene,cam,ren,ctrl,clock,time=0;
+let sunLight,windowPanes=[],sensorDots=[],hvacParticles=[];
+let ledPanelCtx,ledPanelTex,ledMesh;
+const FLOORS=15,FLOOR_H=3.2,BW=18,BD=12;
+let sunT=0.5;
+
+function init(){
+  clock=new THREE.Clock();
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x1a2a40);
+  scene.fog=new THREE.FogExp2(0x1a2a40,.008);
+
+  cam=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,.1,500);
+  cam.position.set(35,30,40);
+
+  ren=new THREE.WebGLRenderer({antialias:true});
+  ren.setSize(innerWidth,innerHeight);
+  ren.setPixelRatio(Math.min(devicePixelRatio,2));
+  ren.shadowMap.enabled=true;
+  ren.shadowMap.type=THREE.PCFSoftShadowMap;
+  ren.toneMapping=THREE.ACESFilmicToneMapping;
+  ren.toneMappingExposure=1.1;
+  document.body.appendChild(ren.domElement);
+
+  ctrl=new THREE.OrbitControls(cam,ren.domElement);
+  ctrl.enableDamping=true;ctrl.dampingFactor=.05;
+  ctrl.target.set(0,FLOORS*FLOOR_H/2,0);
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0x4466aa,.4));
+  sunLight=new THREE.DirectionalLight(0xfff0dd,1.5);
+  sunLight.position.set(30,50,20);
+  sunLight.castShadow=true;
+  sunLight.shadow.mapSize.set(2048,2048);
+  scene.add(sunLight);
+  scene.add(new THREE.HemisphereLight(0x88bbee,0x224433,.3));
+
+  buildBuilding();
+  buildGround();
+  buildLEDPanel();
+  createHVACParticles();
+  createSensorDots();
+  populateFloorList();
+  animate();
+}
+
+function M(c,o={}){return new THREE.MeshStandardMaterial({color:c,...o})}
+
+function buildBuilding(){
+  // Main structure
+  const struct=new THREE.Mesh(new THREE.BoxGeometry(BW,FLOORS*FLOOR_H,BD),
+    M(0x1a2535,{metalness:.7,roughness:.3}));
+  struct.position.set(0,FLOORS*FLOOR_H/2,0);
+  struct.castShadow=true;struct.receiveShadow=true;
+  scene.add(struct);
+
+  // Floor slabs
+  for(let f=0;f<=FLOORS;f++){
+    const slab=new THREE.Mesh(new THREE.BoxGeometry(BW+.4,.25,BD+.4),M(0x2a3a4a,{metalness:.5,roughness:.5}));
+    slab.position.set(0,f*FLOOR_H,0);slab.castShadow=true;
+    scene.add(slab);
+  }
+
+  // Column pillars on corners
+  const pillarGeo=new THREE.BoxGeometry(.6,FLOORS*FLOOR_H,.6);
+  const pillarMat=M(0x3a4a5a,{metalness:.6,roughness:.4});
+  [[-BW/2,-BD/2],[-BW/2,BD/2],[BW/2,-BD/2],[BW/2,BD/2]].forEach(([x,z])=>{
+    const p=new THREE.Mesh(pillarGeo,pillarMat);
+    p.position.set(x,FLOORS*FLOOR_H/2,z);p.castShadow=true;scene.add(p);
+  });
+
+  // Windows - front & back
+  const winGeo=new THREE.PlaneGeometry(1.8,2.2);
+  for(let f=0;f<FLOORS;f++){
+    const cols=Math.floor(BW/2.5);
+    for(let c=0;c<cols;c++){
+      const wx=-BW/2+1.5+c*2.5;
+      const wy=f*FLOOR_H+1.8;
+      const opacity=.3+Math.random()*.4;
+      const wMat=new THREE.MeshStandardMaterial({
+        color:0x88ccff,emissive:0x1a3355,emissiveIntensity:.15,
+        metalness:.9,roughness:.05,transparent:true,opacity:opacity
+      });
+      // Front
+      const wf=new THREE.Mesh(winGeo,wMat);
+      wf.position.set(wx,wy,BD/2+.02);scene.add(wf);
+      windowPanes.push({mesh:wf,mat:wMat,floor:f,baseOpacity:opacity,side:'front'});
+      // Back
+      const wb=new THREE.Mesh(winGeo,wMat.clone());
+      wb.position.set(wx,wy,-BD/2-.02);wb.rotation.y=Math.PI;scene.add(wb);
+      windowPanes.push({mesh:wb,mat:wb.material,floor:f,baseOpacity:opacity,side:'back'});
+    }
+    // Sides
+    const colsZ=Math.floor(BD/2.5);
+    for(let c=0;c<colsZ;c++){
+      const wz=-BD/2+1.5+c*2.5;
+      const wy=f*FLOOR_H+1.8;
+      const opacity=.3+Math.random()*.4;
+      const wMat=new THREE.MeshStandardMaterial({
+        color:0x88ccff,emissive:0x1a3355,emissiveIntensity:.15,
+        metalness:.9,roughness:.05,transparent:true,opacity:opacity
+      });
+      const wr=new THREE.Mesh(winGeo,wMat);
+      wr.position.set(BW/2+.02,wy,wz);wr.rotation.y=Math.PI/2;scene.add(wr);
+      windowPanes.push({mesh:wr,mat:wMat,floor:f,baseOpacity:opacity,side:'right'});
+      const wl=new THREE.Mesh(winGeo,wMat.clone());
+      wl.position.set(-BW/2-.02,wy,wz);wl.rotation.y=-Math.PI/2;scene.add(wl);
+      windowPanes.push({mesh:wl,mat:wl.material,floor:f,baseOpacity:opacity,side:'left'});
+    }
+  }
+
+  // Rooftop solar panels
+  for(let i=0;i<6;i++){
+    const panel=new THREE.Mesh(new THREE.BoxGeometry(2.5,.1,4),M(0x050530,{metalness:.9,roughness:.1}));
+    panel.position.set(-6+i*2.5,FLOORS*FLOOR_H+.3,0);
+    panel.rotation.x=-.3;scene.add(panel);
+  }
+
+  // Rooftop HVAC units
+  const hvacBox=new THREE.Mesh(new THREE.BoxGeometry(3,2,2.5),M(0x556677,{metalness:.5,roughness:.6}));
+  hvacBox.position.set(-5,FLOORS*FLOOR_H+1.2,4);hvacBox.castShadow=true;scene.add(hvacBox);
+  const hvacFan=new THREE.Mesh(new THREE.CylinderGeometry(1,1,.3,16),M(0x445566));
+  hvacFan.position.set(-5,FLOORS*FLOOR_H+2.4,4);scene.add(hvacFan);
+
+  const hvacBox2=new THREE.Mesh(new THREE.BoxGeometry(2,1.5,2),M(0x556677,{metalness:.5,roughness:.6}));
+  hvacBox2.position.set(6,FLOORS*FLOOR_H+1,4.5);scene.add(hvacBox2);
+}
+
+function buildGround(){
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),M(0x1a2030,{roughness:.95}));
+  ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+  // Plaza around building
+  const plaza=new THREE.Mesh(new THREE.PlaneGeometry(40,30),M(0x2a3040,{roughness:.85}));
+  plaza.rotation.x=-Math.PI/2;plaza.position.y=.01;scene.add(plaza);
+}
+
+function buildLEDPanel(){
+  const canvas=document.createElement('canvas');
+  canvas.width=512;canvas.height=256;
+  ledPanelCtx=canvas.getContext('2d');
+  ledPanelTex=new THREE.CanvasTexture(canvas);
+  ledPanelTex.minFilter=THREE.LinearFilter;
+
+  const panelMat=new THREE.MeshStandardMaterial({map:ledPanelTex,emissiveMap:ledPanelTex,emissive:0xffffff,emissiveIntensity:.8});
+  ledMesh=new THREE.Mesh(new THREE.PlaneGeometry(8,4),panelMat);
+  ledMesh.position.set(0,6,BD/2+.1);
+  scene.add(ledMesh);
+  // Panel frame
+  const frame=new THREE.Mesh(new THREE.BoxGeometry(8.4,4.4,.15),M(0x1a1a2a,{metalness:.7,roughness:.4}));
+  frame.position.set(0,6,BD/2+.05);scene.add(frame);
+
+  updateLEDPanel(92);
+}
+
+function updateLEDPanel(score){
+  const ctx=ledPanelCtx;
+  ctx.fillStyle='#050510';ctx.fillRect(0,0,512,256);
+  // Border glow
+  ctx.strokeStyle='#0af';ctx.lineWidth=2;ctx.strokeRect(4,4,504,248);
+  // Title
+  ctx.fillStyle='#0ef';ctx.font='bold 18px Inter,sans-serif';ctx.textAlign='center';
+  ctx.fillText('ENERGY EFFICIENCY',256,35);
+  // Score
+  const grad=ctx.createLinearGradient(200,60,310,180);
+  grad.addColorStop(0,'#00ff88');grad.addColorStop(1,'#00aaff');
+  ctx.fillStyle=grad;ctx.font='bold 80px Inter,sans-serif';
+  ctx.fillText(score,256,145);
+  // Label
+  ctx.fillStyle='#4a8aaa';ctx.font='14px Inter,sans-serif';
+  ctx.fillText('LEED PLATINUM · A+ RATING',256,175);
+  // Bar
+  ctx.fillStyle='rgba(0,100,200,.3)';
+  ctx.fillRect(60,200,392,20);
+  const barGrad=ctx.createLinearGradient(60,0,60+392*(score/100),0);
+  barGrad.addColorStop(0,'#0af');barGrad.addColorStop(1,'#0f8');
+  ctx.fillStyle=barGrad;
+  ctx.fillRect(60,200,392*(score/100),20);
+  ctx.fillStyle='#fff';ctx.font='10px Inter,sans-serif';
+  ctx.fillText(score+'% Efficiency',256,235);
+
+  ledPanelTex.needsUpdate=true;
+}
+
+function createHVACParticles(){
+  const geo=new THREE.BufferGeometry();
+  const count=800;
+  const pos=new Float32Array(count*3);
+  const vel=[];
+  for(let i=0;i<count;i++){
+    pos[i*3]=Math.random()*BW-BW/2;
+    pos[i*3+1]=Math.random()*FLOORS*FLOOR_H;
+    pos[i*3+2]=Math.random()*BD-BD/2;
+    vel.push({x:(Math.random()-.5)*.02,y:.02+Math.random()*.03,z:(Math.random()-.5)*.02});
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const mat=new THREE.PointsMaterial({color:0x44aaff,size:.15,transparent:true,opacity:.4,blending:THREE.AdditiveBlending,depthWrite:false});
+  const pts=new THREE.Points(geo,mat);
+  scene.add(pts);
+  hvacParticles.push({points:pts,vel,count});
+}
+
+function createSensorDots(){
+  const dotGeo=new THREE.SphereGeometry(.15,8,8);
+  for(let f=0;f<FLOORS;f++){
+    const sensorsPerFloor=3+Math.floor(Math.random()*3);
+    for(let s=0;s<sensorsPerFloor;s++){
+      const isWarn=Math.random()<.1;
+      const color=isWarn?0xffaa00:0x00ff88;
+      const dotMat=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:1.5,transparent:true,opacity:.8});
+      const dot=new THREE.Mesh(dotGeo,dotMat);
+      dot.position.set(
+        (Math.random()-.5)*(BW-4),
+        f*FLOOR_H+1+Math.random()*2,
+        (Math.random()-.5)*(BD-4)
+      );
+      scene.add(dot);
+      sensorDots.push({mesh:dot,mat:dotMat,speed:1+Math.random()*3,base:1.5});
+    }
+  }
+}
+
+function populateFloorList(){
+  const el=document.getElementById('floorList');
+  let html='';
+  for(let f=FLOORS-1;f>=0;f--){
+    const sensors=sensorDots.filter(d=>Math.floor(d.mesh.position.y/FLOOR_H)===f);
+    const hasWarn=sensors.some(s=>s.mat.color.r>0.5);
+    const cls=hasWarn?'warn':'ok';
+    html+=`<div class="floor-row"><div class="floor-dot ${cls}"></div><span class="floor-label">Floor ${f+1}</span><span class="floor-val">${sensors.length} sensors</span></div>`;
+  }
+  el.innerHTML=html;
+}
+
+function updateSunPos(val){
+  sunT=val/100;
+  const angle=sunT*Math.PI;
+  const hour=6+sunT*12;
+  const h=Math.floor(hour);
+  const m=Math.floor((hour-h)*60);
+  document.getElementById('timeLabel').textContent=`${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+
+  sunLight.position.set(Math.cos(angle)*50,Math.sin(angle)*60+5,20);
+  const intensity=Math.sin(angle)*1.5;
+  sunLight.intensity=Math.max(.1,intensity);
+
+  const elevation=Math.round(Math.sin(angle)*90);
+  const azimuth=Math.round(45+sunT*180);
+  const irradiance=Math.round(Math.sin(angle)*950);
+  const tint=Math.round(Math.sin(angle)*60+10);
+  document.getElementById('sunAz').textContent=azimuth+'°';
+  document.getElementById('sunEl').textContent=elevation+'°';
+  document.getElementById('sunIrr').textContent=irradiance+' W/m²';
+  document.getElementById('winTint').textContent=tint+'%';
+
+  // Sky color
+  const nightColor=new THREE.Color(0x0a0e1a);
+  const dayColor=new THREE.Color(0x4488cc);
+  const sunsetColor=new THREE.Color(0x884422);
+  if(sunT<.2||sunT>.8){
+    scene.background.copy(nightColor).lerp(sunsetColor,sunT<.2?sunT*5:(1-sunT)*5);
+  }else{
+    scene.background.copy(dayColor);
+  }
+  scene.fog.color.copy(scene.background);
+
+  // Update window transparency based on sun
+  windowPanes.forEach(w=>{
+    const sunFacing=(w.side==='front'&&sunT>.3&&sunT<.7)||(w.side==='right'&&sunT>.5);
+    const tintFactor=sunFacing?Math.sin(angle)*.5:0;
+    w.mat.opacity=w.baseOpacity-tintFactor*.3;
+    w.mat.emissiveIntensity=sunT<.2||sunT>.8?.6:.1;
+  });
+
+  const score=Math.round(85+Math.sin(angle)*10);
+  updateLEDPanel(score);
+  document.getElementById('scoreVal').textContent=score;
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=clock.getDelta();
+  time+=dt;
+  ctrl.update();
+
+  // Sensor pulse
+  sensorDots.forEach(s=>{
+    s.mat.emissiveIntensity=s.base+Math.sin(time*s.speed)*.8;
+  });
+
+  // HVAC particles
+  hvacParticles.forEach(p=>{
+    const pos=p.points.geometry.attributes.position.array;
+    for(let i=0;i<p.count;i++){
+      const v=p.vel[i];
+      pos[i*3]+=v.x;pos[i*3+1]+=v.y;pos[i*3+2]+=v.z;
+      if(pos[i*3+1]>FLOORS*FLOOR_H){pos[i*3+1]=0;pos[i*3]=Math.random()*BW-BW/2;pos[i*3+2]=Math.random()*BD-BD/2;}
+      if(Math.abs(pos[i*3])>BW/2)v.x*=-1;
+      if(Math.abs(pos[i*3+2])>BD/2)v.z*=-1;
+    }
+    p.points.geometry.attributes.position.needsUpdate=true;
+  });
+
+  // HUD updates
+  if(Math.floor(time)%2===0){
+    const supply=(17+Math.sin(time*.3)*2).toFixed(1);
+    const ret=(22+Math.sin(time*.5)*2).toFixed(1);
+    const fan=Math.round(65+Math.sin(time*.2)*15);
+    const chiller=Math.round(55+Math.sin(time*.4)*20);
+    document.getElementById('hvacSupply').textContent=supply+'°C';
+    document.getElementById('hvacReturn').textContent=ret+'°C';
+    document.getElementById('hvacFan').textContent=fan+'%';
+    document.getElementById('hvacBar').style.width=fan+'%';
+    document.getElementById('hvacChiller').textContent=chiller+'%';
+    document.getElementById('chillerBar').style.width=chiller+'%';
+  }
+
+  ren.render(scene,cam);
+}
+
+window.addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();ren.setSize(innerWidth,innerHeight);});
+init();
+updateSunPos(50);
+</script>
+</body>
+</html>
