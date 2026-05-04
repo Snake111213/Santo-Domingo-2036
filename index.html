@@ -125,9 +125,9 @@ canvas{display:block}
   <div class="legend-item"><div class="legend-dot" style="background:#fa0"></div>Sensor advertencia</div>
 </div>
 <div id="time-selector">
-  <button class="active" onclick="setTimeOfDay('noche')">🌙 Noche</button>
+  <button onclick="setTimeOfDay('noche')">🌙 Noche</button>
   <button onclick="setTimeOfDay('tarde')">🌅 Tarde</button>
-  <button onclick="setTimeOfDay('dia')">☀️ Día</button>
+  <button class="active" onclick="setTimeOfDay('dia')">☀️ Día</button>
 </div>
 <div id="controls-hint">🖱️ Rotar · Scroll Zoom · Click derecho Mover</div>
 
@@ -140,7 +140,7 @@ let eC=0,pC=0,nodos=0,sensores=0;
 let particles=[],leakGlows=[],nodeGlows=[],time=0;
 let sunLight,ambLight,hemiLight,groundMesh;
 let windowMats=[],streetLampMats=[],streetLampLights=[];
-let currentTOD='noche';
+let currentTOD='dia';
 let todTarget=null,todLerp=1;
 
 const TOD_PRESETS={
@@ -162,8 +162,8 @@ function lerpV(a,b,t){return a+(b-a)*t;}
 function init(){
   clock=new THREE.Clock();
   scene=new THREE.Scene();
-  scene.fog=new THREE.FogExp2(0x020a18,.0025);
-  scene.background=new THREE.Color(0x020a18);
+  scene.fog=new THREE.FogExp2(0x8ecbf0,.0015);
+  scene.background=new THREE.Color(0x6cb4ee);
 
   cam=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,800);
   cam.position.set(TT*.55,TT*.45,TT*.55);
@@ -174,20 +174,20 @@ function init(){
   ren.shadowMap.enabled=true;
   ren.shadowMap.type=THREE.PCFSoftShadowMap;
   ren.toneMapping=THREE.ACESFilmicToneMapping;
-  ren.toneMappingExposure=.7;
+  ren.toneMappingExposure=1.2;
   document.body.appendChild(ren.domElement);
 
   ctrl=new THREE.OrbitControls(cam,ren.domElement);
   ctrl.enableDamping=true;ctrl.dampingFactor=.05;ctrl.target.set(0,0,0);
 
-  ambLight=new THREE.AmbientLight(0x0a1a3a,.5);scene.add(ambLight);
-  sunLight=new THREE.DirectionalLight(0x4488cc,.8);
-  sunLight.position.set(40,60,20);sunLight.castShadow=true;
+  ambLight=new THREE.AmbientLight(0x88aacc,.7);scene.add(ambLight);
+  sunLight=new THREE.DirectionalLight(0xfff5e0,1.5);
+  sunLight.position.set(40,80,20);sunLight.castShadow=true;
   sunLight.shadow.mapSize.set(2048,2048);
   const s=TT/2;sunLight.shadow.camera.left=-s;sunLight.shadow.camera.right=s;
   sunLight.shadow.camera.top=s;sunLight.shadow.camera.bottom=-s;
   scene.add(sunLight);
-  hemiLight=new THREE.HemisphereLight(0x2244aa,0x001122,.3);scene.add(hemiLight);
+  hemiLight=new THREE.HemisphereLight(0x87ceeb,0x446633,.5);scene.add(hemiLight);
 
   build();
   document.getElementById('loadBar').style.width='100%';
@@ -202,7 +202,7 @@ function mulberry32Val(){_s|=0;_s=_s+0x6D2B79F5|0;var t=Math.imul(_s^_s>>>15,1|_
 
 function build(){
   // Ground
-  groundMesh=new THREE.Mesh(new THREE.PlaneGeometry(TT+50,TT+50),M(0x0a1020,{roughness:.95}));
+  groundMesh=new THREE.Mesh(new THREE.PlaneGeometry(TT+50,TT+50),M(0x2a3a2a,{roughness:.95}));
   groundMesh.rotation.x=-Math.PI/2;groundMesh.receiveShadow=true;scene.add(groundMesh);
 
   const stM=M(0x151525,{roughness:.9});
@@ -232,7 +232,7 @@ function build(){
     const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(bc,{metalness:.5,roughness:.35}));
     b.position.set(x,h/2,z);b.castShadow=true;b.receiveShadow=true;scene.add(b);
     // Windows
-    const wM=new THREE.MeshStandardMaterial({color:0x66aadd,emissive:0x112244,emissiveIntensity:.4+rng()*.4,metalness:.85,roughness:.1,transparent:true,opacity:.75});
+    const wM=new THREE.MeshStandardMaterial({color:0x66aadd,emissive:0x112244,emissiveIntensity:.05+rng()*.1,metalness:.85,roughness:.1,transparent:true,opacity:.75});
     windowMats.push(wM);
     const rows=Math.floor(h/3),cols=Math.floor(w/2.2);
     for(let rw=0;rw<rows;rw++)for(let cl=0;cl<cols;cl++){
@@ -321,11 +321,11 @@ function build(){
     const x=i*BK-TT/2,z=j*BK-TT/2;
     const pole=new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,6,6),M(0x334455));
     pole.position.set(x+ST/2+.5,3,z);scene.add(pole);
-    const lampMat=new THREE.MeshStandardMaterial({color:0xddeeff,emissive:0xaaccff,emissiveIntensity:.8});
+    const lampMat=new THREE.MeshStandardMaterial({color:0xddeeff,emissive:0xaaccff,emissiveIntensity:.05});
     const lamp=new THREE.Mesh(new THREE.BoxGeometry(.8,.12,.5),lampMat);
     lamp.position.set(x+ST/2+.5,6.1,z);scene.add(lamp);
     streetLampMats.push(lampMat);
-    const pl=new THREE.PointLight(0xaaccff,.3,20);pl.position.set(x+ST/2+.5,6,z);scene.add(pl);
+    const pl=new THREE.PointLight(0xaaccff,.05,20);pl.position.set(x+ST/2+.5,6,z);scene.add(pl);
     streetLampLights.push(pl);
   }
 
