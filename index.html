@@ -37,9 +37,54 @@ canvas{display:block}
 #loading h2{color:#0ef;font-size:24px;margin-bottom:16px;text-shadow:0 0 30px #0af}
 #loading .bar{width:280px;height:3px;background:rgba(0,180,255,.1);border-radius:2px;overflow:hidden}
 #loading .fill{height:100%;width:0%;background:linear-gradient(90deg,#0af,#0ef);transition:width .3s}
+#intro{position:fixed;inset:0;background:rgba(4,15,35,0.85);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;backdrop-filter:blur(8px);text-align:center;transition:opacity 0.8s, visibility 0.8s}
+.intro-content{position:relative;padding:50px 40px;background:linear-gradient(180deg, rgba(10,30,60,0.9), rgba(4,15,35,0.95));border-top:1px solid #c8a252;border-bottom:1px solid #c8a252;max-width:800px;width:90%;box-shadow:0 20px 50px rgba(0,0,0,0.5)}
+.intro-content::before{content:'';position:absolute;top:0;left:0;width:40px;height:40px;border-top:2px solid #c8a252;border-left:2px solid #c8a252}
+.intro-content::after{content:'';position:absolute;bottom:0;right:0;width:40px;height:40px;border-bottom:2px solid #c8a252;border-right:2px solid #c8a252}
+.intro-uapa{font-size:12px;color:#c8a252;letter-spacing:2px;text-transform:uppercase;margin-bottom:15px;font-weight:600}
+.intro-sub{font-size:13px;color:#a0b0c0;margin-bottom:4px}
+.intro-title{font-size:56px;font-weight:800;margin-top:25px;line-height:1;letter-spacing:1px;text-shadow:0 0 20px rgba(255,255,255,0.2)}
+.intro-year{font-size:110px;font-weight:800;background:linear-gradient(180deg, #f0d080, #b08030);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:5px;filter:drop-shadow(0 0 15px rgba(200,160,80,0.3))}
+.intro-tagline{font-size:22px;color:#e0c080;font-style:italic;margin-bottom:25px;font-family:Georgia, serif}
+.intro-desc{font-size:15px;color:#d0e0f0;line-height:1.6;max-width:600px;margin:0 auto 40px auto}
+.intro-details{display:flex;flex-direction:column;gap:14px;text-align:left;max-width:550px;margin:0 auto;border-left:1px solid #c8a252;padding-left:25px}
+.intro-detail-item{display:flex;align-items:center;gap:15px;font-size:14px;color:#b0c0d0}
+.intro-icon{color:#c8a252;font-size:18px;width:24px;text-align:center}
+.btn-start{margin-top:40px;background:linear-gradient(90deg, #b08030, #d0a050);color:#000;border:none;padding:16px 45px;font-size:16px;font-weight:bold;border-radius:30px;cursor:pointer;transition:transform 0.3s, box-shadow 0.3s;text-transform:uppercase;letter-spacing:1.5px}
+.btn-start:hover{transform:scale(1.05);box-shadow:0 0 25px rgba(200,160,80,0.5)}
 </style>
 </head>
 <body>
+<div id="intro">
+  <div class="intro-content">
+    <div class="intro-uapa">UNIVERSIDAD ABIERTA PARA ADULTOS (UAPA)</div>
+    <div class="intro-sub">Escuela de Negocios - Educación Superior a Distancia Virtual</div>
+    <div class="intro-sub">Convocatoria Universitaria - Desafío Ciudad del Futuro 2036</div>
+    <div class="intro-title">SANTO DOMINGO</div>
+    <div class="intro-year">2036</div>
+    <div class="intro-tagline">La capital que se rediseña a sí misma</div>
+    <div class="intro-desc">Una propuesta integral de organización urbana, expansión del Metro, desarrollo turístico-tecnológico y modernización de barrios</div>
+    <div class="intro-details">
+      <div class="intro-detail-item">
+        <div class="intro-icon">📈</div>
+        <div>Tema - Evolución de la República Dominicana en la próxima década</div>
+      </div>
+      <div class="intro-detail-item">
+        <div class="intro-icon">📍</div>
+        <div>Caso de estudio - Distrito Nacional y Gran Santo Domingo</div>
+      </div>
+      <div class="intro-detail-item">
+        <div class="intro-icon">📅</div>
+        <div>Fecha de entrega - 5 de mayo de 2026</div>
+      </div>
+      <div class="intro-detail-item">
+        <div class="intro-icon">🏢</div>
+        <div>Santo Domingo, República Dominicana</div>
+      </div>
+    </div>
+    <button class="btn-start" onclick="document.getElementById('intro').style.opacity='0'; setTimeout(()=>document.getElementById('intro').style.visibility='hidden', 800)">Ingresar al Desafío</button>
+  </div>
+</div>
 <div id="loading"><h2>💧 Red Hídrica Inteligente 2036</h2><div class="bar"><div class="fill" id="loadBar"></div></div></div>
 
 <div id="hud">
