@@ -42,16 +42,54 @@ canvas{display:block}
 #time-slider input[type=range]{width:200px;accent-color:#0ef}
 #time-slider .time-val{color:#0ef;font-size:13px;font-weight:700;min-width:50px;text-align:center}
 #controls-hint{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.4);font-size:11px;z-index:10;pointer-events:none}
+#building-intro{position:fixed;inset:0;z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#040a18;transition:opacity 1s ease-out;overflow:hidden}
+#building-intro .bg-img{position:absolute;inset:0;background:url('smart_building_intro.png') center/cover no-repeat;opacity:.5;filter:blur(2px);animation:introZoom 4s ease-out forwards}
+@keyframes introZoom{0%{transform:scale(1.1);opacity:.3}100%{transform:scale(1);opacity:.6}}
+#building-intro .overlay{position:relative;z-index:1;text-align:center;color:#fff}
+#building-intro .overlay .badge{display:inline-block;border:1px solid rgba(0,200,255,.4);color:#0ef;font-size:11px;padding:5px 16px;border-radius:20px;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;backdrop-filter:blur(4px);animation:fadeUp .8s ease-out .2s both}
+#building-intro .overlay h1{font-size:52px;font-weight:700;line-height:1.1;text-shadow:0 0 40px rgba(0,200,255,.3);animation:fadeUp .8s ease-out .4s both}
+#building-intro .overlay h1 span{color:#0ef}
+#building-intro .overlay .sub{font-size:16px;color:#8ab;margin-top:12px;animation:fadeUp .8s ease-out .6s both}
+#building-intro .overlay .features{display:flex;gap:24px;margin-top:30px;animation:fadeUp .8s ease-out .8s both}
+#building-intro .overlay .feat{background:rgba(0,30,60,.6);border:1px solid rgba(0,150,255,.2);border-radius:8px;padding:12px 16px;text-align:center;backdrop-filter:blur(6px)}
+#building-intro .overlay .feat .feat-icon{font-size:24px;margin-bottom:4px}
+#building-intro .overlay .feat .feat-label{font-size:10px;color:#6a9}
+#building-intro .progress-bar{position:absolute;bottom:0;left:0;height:3px;background:linear-gradient(90deg,#0af,#0f8);animation:loadBar 3s linear forwards}
+@keyframes loadBar{0%{width:0}100%{width:100%}}
+@keyframes fadeUp{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
-<div id="sim-nav">
+<div id="building-intro">
+  <div class="bg-img"></div>
+  <div class="overlay">
+    <div class="badge">Santo Domingo 2036</div>
+    <h1><span>Smart</span> Building<br>Simulation</h1>
+    <div class="sub">IoT · HVAC · Energy Efficiency · Adaptive Facade</div>
+    <div class="features">
+      <div class="feat"><div class="feat-icon">📡</div><div class="feat-label">IoT Sensors</div></div>
+      <div class="feat"><div class="feat-icon">🪟</div><div class="feat-label">Smart Glass</div></div>
+      <div class="feat"><div class="feat-icon">❄️</div><div class="feat-label">HVAC Flow</div></div>
+      <div class="feat"><div class="feat-icon">⚡</div><div class="feat-label">Energy A+</div></div>
+    </div>
+  </div>
+  <div class="progress-bar"></div>
+</div>
+<div id="sim-nav" style="opacity:0;transition:opacity .5s">
   <select onchange="if(this.value) window.location.href=this.value">
     <option value="building.html">🏢 Smart Building Facade</option>
     <option value="index.html">🏙️ Vista General Ciudad 3D</option>
     <option value="dashboard.html">💧 Smart Water Network Control Center</option>
   </select>
 </div>
+<script>
+setTimeout(()=>{
+  const intro=document.getElementById('building-intro');
+  intro.style.opacity='0';
+  document.getElementById('sim-nav').style.opacity='1';
+  setTimeout(()=>intro.style.display='none',1000);
+},3000);
+</script>
 
 <div id="hud-left">
   <h2>🏢 Smart Building SD-2036</h2>
