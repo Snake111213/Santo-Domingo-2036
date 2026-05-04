@@ -37,6 +37,10 @@ canvas{display:block}
 #loading h2{color:#0ef;font-size:24px;margin-bottom:16px;text-shadow:0 0 30px #0af}
 #loading .bar{width:280px;height:3px;background:rgba(0,180,255,.1);border-radius:2px;overflow:hidden}
 #loading .fill{height:100%;width:0%;background:linear-gradient(90deg,#0af,#0ef);transition:width .3s}
+#sim-nav{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:500}
+#sim-nav select{background:rgba(0,30,60,0.9);color:#0ef;border:1px solid rgba(0,180,255,0.4);padding:10px 15px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;outline:none;box-shadow:0 0 15px rgba(0,150,255,0.2);backdrop-filter:blur(8px);font-family:inherit;transition:all .3s}
+#sim-nav select:hover{border-color:#0ef;box-shadow:0 0 20px rgba(0,200,255,0.4)}
+#sim-nav select option{background:#0a1a3a;color:#fff}
 #intro{position:fixed;inset:0;background:rgba(4,15,35,0.85);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;backdrop-filter:blur(8px);text-align:center;transition:opacity 0.8s, visibility 0.8s}
 .intro-content{position:relative;padding:50px 40px;background:linear-gradient(180deg, rgba(10,30,60,0.9), rgba(4,15,35,0.95));border-top:1px solid #c8a252;border-bottom:1px solid #c8a252;max-width:800px;width:90%;box-shadow:0 20px 50px rgba(0,0,0,0.5)}
 .intro-content::before{content:'';position:absolute;top:0;left:0;width:40px;height:40px;border-top:2px solid #c8a252;border-left:2px solid #c8a252}
@@ -55,6 +59,12 @@ canvas{display:block}
 </style>
 </head>
 <body>
+<div id="sim-nav">
+  <select onchange="if(this.value) window.location.href=this.value">
+    <option value="index.html">🏙️ Vista General Ciudad 3D</option>
+    <option value="dashboard.html">💧 Smart Water Network Control Center</option>
+  </select>
+</div>
 <div id="intro">
   <div class="intro-content">
     <div class="intro-uapa">UNIVERSIDAD ABIERTA PARA ADULTOS (UAPA)</div>

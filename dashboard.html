@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Smart Water Network Control Center</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#0a0e1a;color:#c8daf0;overflow-x:hidden;display:flex;height:100vh}
+#scene3d{flex:1;position:relative;background:linear-gradient(180deg,#1a2040 0%,#0d1225 60%,#3a2a1a 75%,#2a1a0a 100%);overflow:hidden}
+#dashboard{width:480px;background:rgba(8,14,30,.95);border-left:1px solid rgba(0,150,255,.2);display:flex;flex-direction:column;overflow-y:auto;padding:0}
+.dash-header{background:linear-gradient(90deg,rgba(0,40,80,.8),rgba(0,20,50,.9));padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(0,150,255,.3)}
+.dash-header .logo{display:flex;align-items:center;gap:10px}
+.dash-header .logo .icon{width:36px;height:36px;background:radial-gradient(circle,#0af,#046);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px}
+.dash-header h1{font-size:14px;font-weight:700;color:#fff;letter-spacing:.5px}
+.dash-header .sub{font-size:10px;color:#6af;margin-top:2px}
+.dash-header .clock{text-align:right;font-size:18px;font-weight:600;color:#0ef;font-variant-numeric:tabular-nums}
+.dash-header .date{font-size:10px;color:#68a}
+.dash-body{padding:10px;display:flex;flex-direction:column;gap:8px}
+.row{display:flex;gap:8px}
+.card{background:rgba(10,20,40,.8);border:1px solid rgba(0,120,200,.2);border-radius:8px;padding:10px;flex:1}
+.card h3{font-size:10px;color:#4af;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.summary-item{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:11px}
+.summary-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px}
+.summary-val{margin-left:auto;font-weight:600;color:#fff}
+.alert-badge{background:#f44;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-block;margin-left:auto}
+.alert-item{display:flex;align-items:center;gap:6px;padding:5px 8px;font-size:10px;border-radius:4px;margin:2px 0}
+.alert-item.critical{background:rgba(255,50,50,.15);border-left:3px solid #f44}
+.alert-item.warning{background:rgba(255,170,0,.1);border-left:3px solid #fa0}
+.alert-time{margin-left:auto;color:#68a;font-size:9px}
+.mini-chart{width:100%;height:60px;position:relative}
+.mini-chart canvas{width:100%;height:100%}
+.gauge-row{display:flex;gap:10px;justify-content:center}
+.gauge-item{text-align:center}
+.gauge-circle{width:56px;height:56px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.gauge-circle .val{font-size:14px;font-weight:700;color:#fff}
+.gauge-circle .unit{font-size:7px;color:#68a}
+.gauge-label{font-size:8px;color:#68a;margin-top:4px;text-transform:uppercase}
+.health-row{display:flex;align-items:center;gap:12px}
+.health-circle{width:70px;height:70px;border-radius:50%;border:3px solid #0f8;display:flex;align-items:center;justify-content:center;flex-direction:column;position:relative}
+.health-circle .val{font-size:22px;font-weight:700;color:#0f8}
+.health-circle .lbl{font-size:7px;color:#68a}
+.status-grid{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.status-item{display:flex;align-items:center;gap:6px;font-size:10px}
+.status-dot{width:6px;height:6px;border-radius:50%}
+.status-dot.on{background:#0f8;box-shadow:0 0 6px #0f8}
+.status-dot.off{background:#f44;box-shadow:0 0 6px #f44}
+.online{color:#0f8;font-weight:600;font-size:9px;margin-left:auto}
+.nav-bar{display:flex;border-top:1px solid rgba(0,120,200,.2);background:rgba(5,10,25,.9);padding:6px}
+.nav-item{flex:1;text-align:center;padding:8px 4px;cursor:pointer;border-radius:6px;font-size:9px;color:#4a6a8a;transition:.3s}
+.nav-item:hover,.nav-item.active{color:#0ef;background:rgba(0,100,200,.15)}
+.nav-item .ico{font-size:16px;display:block;margin-bottom:2px}
+.nav-badge{background:#f44;color:#fff;font-size:8px;padding:1px 4px;border-radius:6px;position:relative;top:-8px}
+canvas#netmap{width:100%;height:100px;border-radius:6px;background:rgba(0,10,30,.6)}
+/* 3D Scene Labels */
+.pipe-label{position:absolute;color:#fff;font-size:10px;font-weight:600;pointer-events:none;text-shadow:0 0 10px rgba(0,0,0,.8)}
+.pipe-label .type{font-size:8px;color:#4af;display:block}
+.pipe-label .psi{font-size:13px;font-weight:700}
+.pipe-label.leak{color:#ff4444}
+.pipe-label.leak .type{color:#ff6666}
+.pipe-label.flow .type{color:#0af}
+.node-dot{position:absolute;width:12px;height:12px;border-radius:50%;pointer-events:none}
+.node-dot.blue{background:#0af;box-shadow:0 0 15px #0af,0 0 30px rgba(0,170,255,.3);animation:glow 2s infinite}
+.node-dot.red{background:#f44;box-shadow:0 0 15px #f44,0 0 30px rgba(255,50,50,.4);animation:glow 1s infinite}
+.node-dot.green{background:#0f8;box-shadow:0 0 12px #0f8}
+@keyframes glow{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
+.city-silhouette{position:absolute;bottom:28%;left:0;right:0;height:200px;pointer-events:none}
+.pipe-system{position:absolute;bottom:0;left:0;right:0;height:30%;pointer-events:none}
+.tower{position:absolute;bottom:28%;left:60px;width:50px;text-align:center;pointer-events:none}
+.tower-body{width:30px;height:80px;margin:0 auto;background:linear-gradient(180deg,#8899aa,#556677);border-radius:4px 4px 0 0;position:relative}
+.tower-tank{width:50px;height:30px;margin:0 auto;background:linear-gradient(180deg,#aabbcc,#778899);border-radius:8px 8px 2px 2px;position:relative;display:flex;align-items:center;justify-content:center}
+.tower-label{color:#aaccee;font-size:8px;font-weight:700;margin-top:2px}
+.ground-section{position:absolute;bottom:0;left:0;right:0;height:28%;background:linear-gradient(180deg,#2a1f15 0%,#1a1208 50%,#0f0a05 100%);border-top:2px solid #3a2a1a}
+.particle{position:absolute;width:3px;height:3px;background:#0af;border-radius:50%;opacity:0;pointer-events:none;box-shadow:0 0 6px #0af}
+#sim-nav{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:500}
+#sim-nav select{background:rgba(0,30,60,0.9);color:#0ef;border:1px solid rgba(0,180,255,0.4);padding:10px 15px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;outline:none;box-shadow:0 0 15px rgba(0,150,255,0.2);backdrop-filter:blur(8px);font-family:inherit;transition:all .3s}
+#sim-nav select:hover{border-color:#0ef;box-shadow:0 0 20px rgba(0,200,255,0.4)}
+#sim-nav select option{background:#0a1a3a;color:#fff}
+</style>
+</head>
+<body>
+<div id="sim-nav">
+  <select onchange="if(this.value) window.location.href=this.value">
+    <option value="dashboard.html">💧 Smart Water Network Control Center</option>
+    <option value="index.html">🏙️ Vista General Ciudad 3D</option>
+  </select>
+</div>
+<!-- LEFT: 3D Scene -->
+<div id="scene3d">
+<div class="ground-section"></div>
+
+<!-- City Silhouette -->
+<svg class="city-silhouette" viewBox="0 0 800 200" preserveAspectRatio="none" style="opacity:.4">
+<rect x="80" y="30" width="35" height="170" fill="#1a2035"/><rect x="120" y="60" width="25" height="140" fill="#151a30"/>
+<rect x="160" y="10" width="40" height="190" fill="#1a2540"/><rect x="205" y="50" width="30" height="150" fill="#151a2a"/>
+<rect x="250" y="20" width="45" height="180" fill="#1d2540"/><rect x="300" y="70" width="28" height="130" fill="#161b2a"/>
+<rect x="340" y="5" width="35" height="195" fill="#1a2545"/><rect x="380" y="40" width="50" height="160" fill="#181e35"/>
+<rect x="440" y="25" width="30" height="175" fill="#1a2040"/><rect x="480" y="55" width="40" height="145" fill="#151a30"/>
+<rect x="530" y="15" width="45" height="185" fill="#1d2545"/><rect x="580" y="65" width="25" height="135" fill="#161b2a"/>
+<rect x="620" y="35" width="38" height="165" fill="#1a2040"/><rect x="670" y="45" width="32" height="155" fill="#181e35"/>
+<rect x="710" y="60" width="40" height="140" fill="#151a30"/>
+</svg>
+
+<!-- Water Tower -->
+<div class="tower"><div class="tower-tank"><span style="color:#345;font-size:7px;font-weight:700">CITY WATER</span></div><div class="tower-body"></div></div>
+
+<!-- Pipe Labels -->
+<div class="pipe-label" style="left:12%;bottom:18%"><span class="type">LEAK DETECTED</span><span style="color:#f44;font-size:9px">Sensor ID: L-217</span></div>
+<div class="node-dot red" style="left:15%;bottom:20%"></div>
+
+<div class="pipe-label" style="left:30%;bottom:14%"><span class="type">PRESSURE NODE</span><span class="psi">61.3 PSI</span></div>
+<div class="node-dot blue" style="left:33%;bottom:16%"></div>
+
+<div class="pipe-label" style="left:35%;bottom:24%"><span class="type">PRESSURE NODE</span><span class="psi">51.7 PSI</span></div>
+<div class="node-dot blue" style="left:38%;bottom:26%"></div>
+
+<div class="pipe-label" style="left:40%;bottom:8%"><span class="type">PRESSURE NODE</span><span class="psi">43.8 PSI</span></div>
+<div class="node-dot blue" style="left:43%;bottom:10%"></div>
+
+<div class="pipe-label" style="left:55%;bottom:20%"><span class="type">PRESSURE NODE</span><span class="psi">49.2 PSI</span></div>
+<div class="node-dot blue" style="left:58%;bottom:22%"></div>
+
+<div class="pipe-label leak" style="left:48%;bottom:14%"><span class="type">LEAK DETECTED</span><span style="font-size:9px">Sensor ID: L-309</span></div>
+<div class="node-dot red" style="left:51%;bottom:16%"></div>
+
+<div class="pipe-label flow" style="left:8%;bottom:5%"><span class="type">FLOW SENSOR</span><span style="font-size:9px">Sensor ID: F-104</span><br><span style="font-size:9px;color:#0af">Flow: 2,319 GPM</span></div>
+<div class="node-dot green" style="left:11%;bottom:7%"></div>
+
+<div class="pipe-label leak" style="left:35%;bottom:3%"><span class="type">LEAK DETECTED</span><span style="font-size:9px">Sensor ID: L-412</span></div>
+<div class="node-dot red" style="left:38%;bottom:5%"></div>
+
+<div class="pipe-label" style="right:8%;bottom:5%"><span class="type">PRESSURE NODE</span><span class="psi">57.9 PSI</span></div>
+<div class="node-dot blue" style="right:11%;bottom:7%"></div>
+
+<!-- SVG Pipes -->
+<svg style="position:absolute;bottom:0;left:0;width:100%;height:30%;pointer-events:none" viewBox="0 0 800 250">
+<defs><filter id="pipeglow"><feGaussianBlur stdDeviation="3" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<!-- Main horizontal pipes -->
+<line x1="0" y1="80" x2="800" y2="80" stroke="#1155aa" stroke-width="8" opacity=".6"/>
+<line x1="0" y1="80" x2="800" y2="80" stroke="#0088dd" stroke-width="4" opacity=".3" filter="url(#pipeglow)"/>
+<line x1="50" y1="150" x2="750" y2="150" stroke="#1155aa" stroke-width="7" opacity=".6"/>
+<line x1="50" y1="150" x2="750" y2="150" stroke="#0088dd" stroke-width="3" opacity=".3" filter="url(#pipeglow)"/>
+<line x1="100" y1="210" x2="650" y2="210" stroke="#1155aa" stroke-width="6" opacity=".5"/>
+<line x1="100" y1="210" x2="650" y2="210" stroke="#0088dd" stroke-width="3" opacity=".3" filter="url(#pipeglow)"/>
+<!-- Vertical connectors -->
+<line x1="150" y1="50" x2="150" y2="210" stroke="#1155aa" stroke-width="6" opacity=".5"/>
+<line x1="300" y1="40" x2="300" y2="220" stroke="#1155aa" stroke-width="7" opacity=".5"/>
+<line x1="450" y1="50" x2="450" y2="200" stroke="#1155aa" stroke-width="6" opacity=".5"/>
+<line x1="600" y1="60" x2="600" y2="210" stroke="#1155aa" stroke-width="6" opacity=".5"/>
+<!-- Glow on verticals -->
+<line x1="150" y1="50" x2="150" y2="210" stroke="#0088dd" stroke-width="3" opacity=".2" filter="url(#pipeglow)"/>
+<line x1="300" y1="40" x2="300" y2="220" stroke="#0088dd" stroke-width="3" opacity=".2" filter="url(#pipeglow)"/>
+<line x1="450" y1="50" x2="450" y2="200" stroke="#0088dd" stroke-width="3" opacity=".2" filter="url(#pipeglow)"/>
+<line x1="600" y1="60" x2="600" y2="210" stroke="#0088dd" stroke-width="3" opacity=".2" filter="url(#pipeglow)"/>
+<!-- Valve joints -->
+<circle cx="150" cy="80" r="8" fill="#0a2040" stroke="#0af" stroke-width="2" opacity=".8"/>
+<circle cx="300" cy="80" r="8" fill="#0a2040" stroke="#0af" stroke-width="2" opacity=".8"/>
+<circle cx="450" cy="80" r="8" fill="#0a2040" stroke="#0af" stroke-width="2" opacity=".8"/>
+<circle cx="600" cy="80" r="8" fill="#0a2040" stroke="#0af" stroke-width="2" opacity=".8"/>
+<circle cx="150" cy="150" r="7" fill="#0a2040" stroke="#0af" stroke-width="2" opacity=".8"/>
+<circle cx="300" cy="150" r="7" fill="#0a2040" stroke="#0af" stroke-width="2" opacity=".8"/>
+<circle cx="450" cy="150" r="7" fill="#0a2040" stroke="#0af" stroke-width="2" opacity=".8"/>
+<circle cx="600" cy="150" r="7" fill="#0a2040" stroke="#0af" stroke-width="2" opacity=".8"/>
+</svg>
+</div>
+
+<!-- RIGHT: Dashboard -->
+<div id="dashboard">
+<div class="dash-header">
+  <div class="logo">
+    <div class="icon">💧</div>
+    <div><h1>SMART WATER NETWORK CONTROL CENTER</h1><div class="sub">CITY OF 500,000</div></div>
+  </div>
+  <div><div class="clock" id="clock">14:35:42</div><div class="date" id="dateStr">MAY 4, 2026</div></div>
+</div>
+
+<div class="dash-body">
+  <!-- Network Overview + System Summary -->
+  <div class="row">
+    <div class="card" style="flex:1.5">
+      <h3>📡 Network Overview</h3>
+      <canvas id="netmap" width="260" height="100"></canvas>
+    </div>
+    <div class="card">
+      <h3>📊 System Summary</h3>
+      <div class="summary-item"><div class="summary-icon" style="background:rgba(0,100,200,.2)">🔵</div>Total Nodes<span class="summary-val">128</span></div>
+      <div class="summary-item"><div class="summary-icon" style="background:rgba(0,200,100,.2)">🟢</div>Active Sensors<span class="summary-val">342</span></div>
+      <div class="summary-item"><div class="summary-icon" style="background:rgba(0,150,255,.2)">💧</div>Water Demand<span class="summary-val">152.7 MGD</span></div>
+      <div class="summary-item"><div class="summary-icon" style="background:rgba(0,200,150,.2)">🏗️</div>Reservoir Level<span class="summary-val">67%</span></div>
+    </div>
+  </div>
+
+  <!-- Active Alerts -->
+  <div class="card" style="padding:8px 10px">
+    <div style="display:flex;align-items:center"><h3 style="margin:0">⚠️ Active Alerts</h3><span class="alert-badge">3</span></div>
+    <div class="alert-item critical">🔴 <b>3</b> Leaks Detected</div>
+    <div class="alert-item warning">🟡 <b>2</b> High Pressure</div>
+  </div>
+
+  <!-- Pressure Analytics + Leak Alerts -->
+  <div class="row">
+    <div class="card" style="flex:1.3">
+      <h3>📈 Pressure Analytics</h3>
+      <canvas id="pressureChart" width="220" height="60" style="width:100%;height:60px"></canvas>
+    </div>
+    <div class="card">
+      <h3 style="color:#f66">🔴 Leak Alerts</h3>
+      <div class="alert-item critical" style="padding:3px 6px"><span>Sensor ID: L-217</span><span class="alert-time">14:32</span></div>
+      <div style="font-size:8px;color:#557;padding:0 6px">Main St & 5th Ave</div>
+      <div class="alert-item critical" style="padding:3px 6px"><span>Sensor ID: L-309</span><span class="alert-time">14:28</span></div>
+      <div style="font-size:8px;color:#557;padding:0 6px">Oak Rd & 12th St</div>
+      <div class="alert-item critical" style="padding:3px 6px"><span>Sensor ID: L-412</span><span class="alert-time">14:21</span></div>
+      <div style="font-size:8px;color:#557;padding:0 6px">Pine St & 8th Ave</div>
+    </div>
+  </div>
+
+  <!-- Water Quality + System Health -->
+  <div class="row">
+    <div class="card">
+      <h3>🧪 Water Quality</h3>
+      <div class="gauge-row">
+        <div class="gauge-item">
+          <div class="gauge-circle" style="border:3px solid #0f8"><span class="val">1.25</span><span class="unit">ppm</span></div>
+          <div class="gauge-label">Cl. Residual</div>
+        </div>
+        <div class="gauge-item">
+          <div class="gauge-circle" style="border:3px solid #0af"><span class="val">7.2</span><span class="unit">pH</span></div>
+          <div class="gauge-label">pH Level</div>
+        </div>
+        <div class="gauge-item">
+          <div class="gauge-circle" style="border:3px solid #0cf"><span class="val">0.18</span><span class="unit">NTU</span></div>
+          <div class="gauge-label">Turbidity</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>💚 System Health</h3>
+      <div class="health-row">
+        <div class="health-circle"><span class="val">98%</span><span class="lbl">UPTIME</span></div>
+        <div class="status-grid">
+          <div class="status-item"><span class="status-dot on"></span>Pumps<span class="online">ONLINE</span></div>
+          <div class="status-item"><span class="status-dot on"></span>Valves<span class="online">ONLINE</span></div>
+          <div class="status-item"><span class="status-dot on"></span>Sensors<span class="online">ONLINE</span></div>
+          <div class="status-item"><span class="status-dot on"></span>Comms<span class="online">ONLINE</span></div>
+          <div class="status-item" style="grid-column:span 2"><span class="status-dot on"></span>Power Supply<span class="online">ONLINE</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Navigation Bar -->
+<div class="nav-bar">
+  <div class="nav-item active"><span class="ico">📊</span>DASHBOARD</div>
+  <div class="nav-item"><span class="ico">🌐</span>NETWORK</div>
+  <div class="nav-item"><span class="ico">📡</span>SENSORS</div>
+  <div class="nav-item"><span class="ico">⚠️</span>ALERTS<span class="nav-badge">3</span></div>
+  <div class="nav-item"><span class="ico">📄</span>REPORTS</div>
+  <div class="nav-item"><span class="ico">⚙️</span>SETTINGS</div>
+</div>
+</div>
+
+<script>
+// Clock
+function updateClock(){
+  const n=new Date();
+  document.getElementById('clock').textContent=n.toLocaleTimeString('en',{hour12:false});
+  document.getElementById('dateStr').textContent=n.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'}).toUpperCase();
+}
+setInterval(updateClock,1000);updateClock();
+
+// Network Map
+function drawNetMap(){
+  const c=document.getElementById('netmap'),ctx=c.getContext('2d');
+  c.width=c.offsetWidth*2;c.height=c.offsetHeight*2;ctx.scale(2,2);
+  const w=c.offsetWidth,h=c.offsetHeight;
+  // Nodes
+  const nodes=[];
+  for(let i=0;i<40;i++)nodes.push({x:15+Math.random()*(w-30),y:10+Math.random()*(h-20),leak:Math.random()<.08});
+  // Connections
+  ctx.strokeStyle='rgba(0,120,255,.25)';ctx.lineWidth=1;
+  nodes.forEach((n,i)=>{
+    const nearest=nodes.filter((_,j)=>j!==i).sort((a,b)=>Math.hypot(a.x-n.x,a.y-n.y)-Math.hypot(b.x-n.x,b.y-n.y)).slice(0,3);
+    nearest.forEach(m=>{ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(m.x,m.y);ctx.stroke();});
+  });
+  // Draw nodes
+  nodes.forEach(n=>{
+    ctx.beginPath();ctx.arc(n.x,n.y,n.leak?3.5:2.5,0,Math.PI*2);
+    ctx.fillStyle=n.leak?'#f44':'#0af';ctx.fill();
+    if(n.leak){ctx.beginPath();ctx.arc(n.x,n.y,6,0,Math.PI*2);ctx.fillStyle='rgba(255,50,50,.2)';ctx.fill();}
+  });
+}
+drawNetMap();
+
+// Pressure Chart
+function drawPressure(){
+  const c=document.getElementById('pressureChart'),ctx=c.getContext('2d');
+  c.width=c.offsetWidth*2;c.height=c.offsetHeight*2;ctx.scale(2,2);
+  const w=c.offsetWidth,h=c.offsetHeight;
+  // Grid
+  ctx.strokeStyle='rgba(0,100,200,.1)';ctx.lineWidth=.5;
+  for(let y=0;y<h;y+=15){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  // Data
+  ctx.beginPath();ctx.moveTo(0,h*.5);
+  for(let x=0;x<w;x++){
+    const y=h*.3+Math.sin(x*.05)*h*.15+Math.sin(x*.12)*h*.08+Math.random()*3;
+    ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle='#0af';ctx.lineWidth=1.5;ctx.stroke();
+  // Fill
+  ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();
+  const grd=ctx.createLinearGradient(0,0,0,h);grd.addColorStop(0,'rgba(0,150,255,.15)');grd.addColorStop(1,'rgba(0,150,255,0)');
+  ctx.fillStyle=grd;ctx.fill();
+  // Labels
+  ctx.fillStyle='#4a6a8a';ctx.font='8px Inter';
+  ['MAX','200','150','100'].forEach((l,i)=>{ctx.fillText(l,2,12+i*14);});
+  ['00:00','06:00','12:00','18:00','24:00'].forEach((l,i)=>{ctx.fillText(l,i*(w/4)-8,h-2);});
+}
+drawPressure();
+
+// Animate particles in pipes
+function createParticles(){
+  const scene=document.getElementById('scene3d');
+  for(let i=0;i<30;i++){
+    const p=document.createElement('div');p.className='particle';
+    p.style.left=Math.random()*100+'%';
+    p.style.bottom=Math.random()*28+'%';
+    scene.appendChild(p);
+    animateParticle(p);
+  }
+}
+function animateParticle(p){
+  const dur=2000+Math.random()*3000;
+  const startX=parseFloat(p.style.left);
+  const y=p.style.bottom;
+  p.animate([
+    {left:startX+'%',opacity:0,transform:'scale(0.5)'},
+    {left:(startX+5)+'%',opacity:1,transform:'scale(1)'},
+    {left:(startX+15)+'%',opacity:0,transform:'scale(0.5)'}
+  ],{duration:dur,iterations:Infinity,delay:Math.random()*2000});
+}
+createParticles();
+</script>
+</body>
+</html>
