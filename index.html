@@ -41,21 +41,31 @@ canvas{display:block}
 #sim-nav select{background:rgba(0,30,60,0.9);color:#0ef;border:1px solid rgba(0,180,255,0.4);padding:10px 15px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;outline:none;box-shadow:0 0 15px rgba(0,150,255,0.2);backdrop-filter:blur(8px);font-family:inherit;transition:all .3s}
 #sim-nav select:hover{border-color:#0ef;box-shadow:0 0 20px rgba(0,200,255,0.4)}
 #sim-nav select option{background:#0a1a3a;color:#fff}
-#intro{position:fixed;inset:0;background:rgba(4,15,35,0.85);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;backdrop-filter:blur(8px);text-align:center;transition:opacity 0.8s, visibility 0.8s}
-.intro-content{position:relative;padding:50px 40px;background:linear-gradient(180deg, rgba(10,30,60,0.9), rgba(4,15,35,0.95));border-top:1px solid #c8a252;border-bottom:1px solid #c8a252;max-width:800px;width:90%;box-shadow:0 20px 50px rgba(0,0,0,0.5)}
-.intro-content::before{content:'';position:absolute;top:0;left:0;width:40px;height:40px;border-top:2px solid #c8a252;border-left:2px solid #c8a252}
-.intro-content::after{content:'';position:absolute;bottom:0;right:0;width:40px;height:40px;border-bottom:2px solid #c8a252;border-right:2px solid #c8a252}
-.intro-uapa{font-size:12px;color:#c8a252;letter-spacing:2px;text-transform:uppercase;margin-bottom:15px;font-weight:600}
-.intro-sub{font-size:13px;color:#a0b0c0;margin-bottom:4px}
-.intro-title{font-size:56px;font-weight:800;margin-top:25px;line-height:1;letter-spacing:1px;text-shadow:0 0 20px rgba(255,255,255,0.2)}
-.intro-year{font-size:110px;font-weight:800;background:linear-gradient(180deg, #f0d080, #b08030);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:5px;filter:drop-shadow(0 0 15px rgba(200,160,80,0.3))}
-.intro-tagline{font-size:22px;color:#e0c080;font-style:italic;margin-bottom:25px;font-family:Georgia, serif}
-.intro-desc{font-size:15px;color:#d0e0f0;line-height:1.6;max-width:600px;margin:0 auto 40px auto}
-.intro-details{display:flex;flex-direction:column;gap:14px;text-align:left;max-width:550px;margin:0 auto;border-left:1px solid #c8a252;padding-left:25px}
-.intro-detail-item{display:flex;align-items:center;gap:15px;font-size:14px;color:#b0c0d0}
-.intro-icon{color:#c8a252;font-size:18px;width:24px;text-align:center}
-.btn-start{margin-top:40px;background:linear-gradient(90deg, #b08030, #d0a050);color:#000;border:none;padding:16px 45px;font-size:16px;font-weight:bold;border-radius:30px;cursor:pointer;transition:transform 0.3s, box-shadow 0.3s;text-transform:uppercase;letter-spacing:1.5px}
-.btn-start:hover{transform:scale(1.05);box-shadow:0 0 25px rgba(200,160,80,0.5)}
+#intro{position:fixed;inset:0;z-index:200;overflow:hidden;transition:opacity 1.2s ease-out}
+#intro .hero-bg{position:absolute;inset:0;background:url('city_intro_hero.png') center/cover no-repeat;animation:heroZoom 8s ease-out forwards}
+@keyframes heroZoom{0%{transform:scale(1.15);filter:brightness(.4) blur(3px)}100%{transform:scale(1);filter:brightness(.35) blur(1px)}}
+#intro .hero-gradient{position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,10,25,.3) 0%,rgba(4,10,25,.5) 40%,rgba(4,10,25,.95) 100%)}
+#intro canvas.particles-canvas{position:absolute;inset:0;pointer-events:none}
+#intro .hero-content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:8vh;text-align:center;color:#fff}
+#intro .top-bar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:25px 40px;z-index:3}
+#intro .top-bar .uni{font-size:10px;color:rgba(200,220,255,.5);letter-spacing:3px;text-transform:uppercase}
+#intro .top-bar .live-dot{display:flex;align-items:center;gap:6px;font-size:10px;color:#0f8}
+#intro .top-bar .live-dot::before{content:'';width:6px;height:6px;border-radius:50%;background:#0f8;animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+#intro .city-name{font-size:clamp(36px,8vw,80px);font-weight:800;letter-spacing:3px;line-height:1;animation:slideUp 1s ease-out .3s both}
+#intro .city-year{font-size:clamp(60px,15vw,160px);font-weight:900;line-height:.85;background:linear-gradient(180deg,#fff 0%,#0ef 50%,#0af 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 30px rgba(0,200,255,.4));animation:slideUp 1s ease-out .5s both}
+#intro .tagline{font-size:clamp(14px,2.5vw,22px);color:#a0c0e0;margin-top:8px;font-weight:300;letter-spacing:1px;animation:slideUp 1s ease-out .7s both}
+#intro .divider{width:60px;height:2px;background:linear-gradient(90deg,transparent,#0ef,transparent);margin:20px auto;animation:slideUp 1s ease-out .8s both}
+#intro .stats-row{display:flex;gap:clamp(15px,4vw,40px);margin-top:10px;animation:slideUp 1s ease-out .9s both}
+#intro .stat-box{text-align:center}
+#intro .stat-num{font-size:clamp(24px,4vw,42px);font-weight:700;color:#0ef;font-variant-numeric:tabular-nums}
+#intro .stat-label{font-size:clamp(8px,1.2vw,11px);color:#6a8aaa;text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+#intro .enter-btn{margin-top:30px;background:transparent;border:1px solid rgba(0,200,255,.4);color:#0ef;padding:14px 50px;font-size:15px;font-weight:600;border-radius:30px;cursor:pointer;letter-spacing:2px;text-transform:uppercase;transition:all .4s;animation:slideUp 1s ease-out 1.1s both;position:relative;overflow:hidden}
+#intro .enter-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(0,200,255,.15),transparent);transform:translateX(-100%);transition:transform .6s}
+#intro .enter-btn:hover{background:rgba(0,200,255,.1);border-color:#0ef;box-shadow:0 0 30px rgba(0,200,255,.3);transform:translateY(-2px)}
+#intro .enter-btn:hover::before{transform:translateX(100%)}
+@keyframes slideUp{0%{opacity:0;transform:translateY(40px)}100%{opacity:1;transform:translateY(0)}}
+#intro .bottom-line{position:absolute;bottom:0;left:0;width:100%;height:3px;background:linear-gradient(90deg,transparent,#0af,#0ef,#0af,transparent);opacity:.6}
 </style>
 </head>
 <body>
@@ -67,35 +77,52 @@ canvas{display:block}
   </select>
 </div>
 <div id="intro">
-  <div class="intro-content">
-    <div class="intro-uapa">UNIVERSIDAD ABIERTA PARA ADULTOS (UAPA)</div>
-    <div class="intro-sub">Escuela de Negocios - Educación Superior a Distancia Virtual</div>
-    <div class="intro-sub">Convocatoria Universitaria - Desafío Ciudad del Futuro 2036</div>
-    <div class="intro-title">SANTO DOMINGO</div>
-    <div class="intro-year">2036</div>
-    <div class="intro-tagline">La capital que se rediseña a sí misma</div>
-    <div class="intro-desc">Una propuesta integral de organización urbana, expansión del Metro, desarrollo turístico-tecnológico y modernización de barrios</div>
-    <div class="intro-details">
-      <div class="intro-detail-item">
-        <div class="intro-icon">📈</div>
-        <div>Tema - Evolución de la República Dominicana en la próxima década</div>
-      </div>
-      <div class="intro-detail-item">
-        <div class="intro-icon">📍</div>
-        <div>Caso de estudio - Distrito Nacional y Gran Santo Domingo</div>
-      </div>
-      <div class="intro-detail-item">
-        <div class="intro-icon">📅</div>
-        <div>Fecha de entrega - 5 de mayo de 2026</div>
-      </div>
-      <div class="intro-detail-item">
-        <div class="intro-icon">🏢</div>
-        <div>Santo Domingo, República Dominicana</div>
-      </div>
-    </div>
-    <button class="btn-start" onclick="document.getElementById('intro').style.opacity='0'; setTimeout(()=>document.getElementById('intro').style.visibility='hidden', 800)">Ingresar al Desafío</button>
+  <div class="hero-bg"></div>
+  <div class="hero-gradient"></div>
+  <canvas class="particles-canvas" id="introParticles"></canvas>
+  <div class="top-bar">
+    <div class="uni">Universidad Abierta para Adultos · UAPA</div>
+    <div class="live-dot">SIMULACIÓN EN VIVO</div>
   </div>
+  <div class="hero-content">
+    <div class="city-name">SANTO DOMINGO</div>
+    <div class="city-year">2036</div>
+    <div class="tagline">La capital que se rediseña a sí misma</div>
+    <div class="divider"></div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-num" id="cPop">0</div><div class="stat-label">Población</div></div>
+      <div class="stat-box"><div class="stat-num" id="cSensors">0</div><div class="stat-label">Sensores IoT</div></div>
+      <div class="stat-box"><div class="stat-num" id="cEnergy">0</div><div class="stat-label">% Energía Verde</div></div>
+      <div class="stat-box"><div class="stat-num" id="cMetro">0</div><div class="stat-label">Km Metro</div></div>
+    </div>
+    <button class="enter-btn" onclick="closeIntro()">▶ Explorar Ciudad</button>
+  </div>
+  <div class="bottom-line"></div>
 </div>
+<script>
+// Animated counters
+function animateCounter(el,target,suffix,duration){
+  let start=0;const step=target/((duration||2000)/16);
+  const iv=setInterval(()=>{start+=step;if(start>=target){start=target;clearInterval(iv)}
+  el.textContent=Math.round(start).toLocaleString()+(suffix||'');},16);
+}
+setTimeout(()=>{
+  animateCounter(document.getElementById('cPop'),500000,'',2500);
+  animateCounter(document.getElementById('cSensors'),12480,'',2500);
+  animateCounter(document.getElementById('cEnergy'),78,'%',2000);
+  animateCounter(document.getElementById('cMetro'),85,'',2000);
+},600);
+// Particle overlay
+(function(){
+  const c=document.getElementById('introParticles'),ctx=c.getContext('2d');
+  let w,h,pts=[];
+  function resize(){w=c.width=innerWidth;h=c.height=innerHeight;pts=[];for(let i=0;i<60;i++)pts.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*2+.5,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)-.2,a:Math.random()*.5+.1});}
+  resize();window.addEventListener('resize',resize);
+  function draw(){ctx.clearRect(0,0,w,h);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.y<0)p.y=h;if(p.x<0||p.x>w)p.vx*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(0,200,255,${p.a})`;ctx.fill();});requestAnimationFrame(draw);}
+  draw();
+})();
+function closeIntro(){const i=document.getElementById('intro');i.style.opacity='0';setTimeout(()=>i.style.display='none',1200);}
+</script>
 <div id="loading"><h2>💧 Red Hídrica Inteligente 2036</h2><div class="bar"><div class="fill" id="loadBar"></div></div></div>
 
 <div id="hud">
