@@ -343,7 +343,10 @@ function build(){
   // === SMART BUILDING (landmark) ===
   createSmartBuilding(0,0);
 
-  updateHUD();\n}\n\nfunction createSmartBuilding(cx,cz){
+  updateHUD();
+}
+
+function createSmartBuilding(cx,cz){
   const SH=48,SW=14,SD=10;
   // Glass facade
   const glassMat=M(0x1a3050,{metalness:.8,roughness:.1,transparent:true,opacity:.6});
