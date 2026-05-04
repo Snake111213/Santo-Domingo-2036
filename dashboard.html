@@ -76,9 +76,60 @@ canvas#netmap{width:100%;height:100px;border-radius:6px;background:rgba(0,10,30,
 #sim-nav select{background:rgba(0,30,60,0.9);color:#0ef;border:1px solid rgba(0,180,255,0.4);padding:10px 15px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;outline:none;box-shadow:0 0 15px rgba(0,150,255,0.2);backdrop-filter:blur(8px);font-family:inherit;transition:all .3s}
 #sim-nav select:hover{border-color:#0ef;box-shadow:0 0 20px rgba(0,200,255,0.4)}
 #sim-nav select option{background:#0a1a3a;color:#fff}
+#dash-intro{position:fixed;inset:0;z-index:600;overflow:hidden;transition:opacity 1s ease-out}
+#dash-intro .bg-img{position:absolute;inset:0;background:url('water_network_intro.png') center/cover no-repeat;animation:dZoom 5s ease-out forwards}
+@keyframes dZoom{0%{transform:scale(1.12);filter:brightness(.3) blur(3px)}100%{transform:scale(1);filter:brightness(.3) blur(1px)}}
+#dash-intro .gradient{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,8,20,.2) 0%,rgba(0,8,20,.6) 50%,rgba(0,8,20,.97) 100%)}
+#dash-intro canvas{position:absolute;inset:0;pointer-events:none}
+#dash-intro .content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:8vh;text-align:center;color:#fff}
+#dash-intro .top-bar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:25px 40px;z-index:3}
+#dash-intro .top-bar .label{font-size:10px;color:rgba(150,200,255,.4);letter-spacing:3px;text-transform:uppercase}
+#dash-intro .top-bar .status{display:flex;align-items:center;gap:6px;font-size:10px;color:#0af}
+#dash-intro .top-bar .status::before{content:'';width:6px;height:6px;border-radius:50%;background:#0af;animation:dblink 1.2s infinite}
+@keyframes dblink{0%,100%{opacity:1}50%{opacity:.15}}
+#dash-intro .icon-water{font-size:50px;margin-bottom:10px;animation:dSlide .8s ease-out .2s both;filter:drop-shadow(0 0 20px rgba(0,150,255,.5))}
+#dash-intro .title{font-size:clamp(28px,6vw,52px);font-weight:800;letter-spacing:2px;line-height:1.1;animation:dSlide .8s ease-out .4s both}
+#dash-intro .title span{background:linear-gradient(180deg,#fff,#0cf,#0af);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#dash-intro .sub{font-size:clamp(12px,2vw,18px);color:#6a9abb;margin-top:8px;font-weight:300;letter-spacing:1px;animation:dSlide .8s ease-out .6s both}
+#dash-intro .line{width:80px;height:2px;background:linear-gradient(90deg,transparent,#0af,transparent);margin:18px auto;animation:dSlide .8s ease-out .7s both}
+#dash-intro .stats{display:flex;gap:clamp(12px,3vw,35px);animation:dSlide .8s ease-out .8s both}
+#dash-intro .st{text-align:center}
+#dash-intro .st .num{font-size:clamp(20px,3.5vw,36px);font-weight:700;color:#0af;font-variant-numeric:tabular-nums}
+#dash-intro .st .lbl{font-size:clamp(7px,1.1vw,10px);color:#4a7a9a;text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+#dash-intro .progress{position:absolute;bottom:0;left:0;height:3px;background:linear-gradient(90deg,#0af,#0ef);animation:dLoad 3s linear forwards}
+@keyframes dLoad{0%{width:0}100%{width:100%}}
+@keyframes dSlide{0%{opacity:0;transform:translateY(35px)}100%{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
+<div id="dash-intro">
+  <div class="bg-img"></div>
+  <div class="gradient"></div>
+  <canvas id="dashParticles"></canvas>
+  <div class="top-bar">
+    <div class="label">Santo Domingo 2036 · Red Hídrica</div>
+    <div class="status">SISTEMA ACTIVO</div>
+  </div>
+  <div class="content">
+    <div class="icon-water">💧</div>
+    <div class="title"><span>Smart Water Network</span><br>Control Center</div>
+    <div class="sub">Monitoreo en tiempo real · Detección de fugas · Análisis de presión</div>
+    <div class="line"></div>
+    <div class="stats">
+      <div class="st"><div class="num" id="dNodes">0</div><div class="lbl">Nodos</div></div>
+      <div class="st"><div class="num" id="dSensors">0</div><div class="lbl">Sensores</div></div>
+      <div class="st"><div class="num" id="dPipes">0</div><div class="lbl">Km Tuberías</div></div>
+      <div class="st"><div class="num" id="dHealth">0</div><div class="lbl">% Salud</div></div>
+    </div>
+  </div>
+  <div class="progress"></div>
+</div>
+<script>
+function aniCount(el,tgt,sfx,dur){let s=0;const st=tgt/((dur||2000)/16);const iv=setInterval(()=>{s+=st;if(s>=tgt){s=tgt;clearInterval(iv)}el.textContent=Math.round(s).toLocaleString()+(sfx||'');},16);}
+setTimeout(()=>{aniCount(document.getElementById('dNodes'),128,'',2000);aniCount(document.getElementById('dSensors'),342,'',2000);aniCount(document.getElementById('dPipes'),486,'',2200);aniCount(document.getElementById('dHealth'),98,'%',1800);},500);
+(function(){const c=document.getElementById('dashParticles'),x=c.getContext('2d');let w,h,p=[];function r(){w=c.width=innerWidth;h=c.height=innerHeight;p=[];for(let i=0;i<50;i++)p.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*2+.3,vx:(Math.random()-.5)*.2,vy:Math.random()*-.4-.1,a:Math.random()*.4+.1});}r();window.addEventListener('resize',r);function d(){x.clearRect(0,0,w,h);p.forEach(q=>{q.x+=q.vx;q.y+=q.vy;if(q.y<0){q.y=h;q.x=Math.random()*w}if(q.x<0||q.x>w)q.vx*=-1;x.beginPath();x.arc(q.x,q.y,q.r,0,Math.PI*2);x.fillStyle=`rgba(0,170,255,${q.a})`;x.fill();});requestAnimationFrame(d);}d();})();
+setTimeout(()=>{const i=document.getElementById('dash-intro');i.style.opacity='0';setTimeout(()=>i.style.display='none',1000);},3500);
+</script>
 <div id="sim-nav">
   <select onchange="if(this.value) window.location.href=this.value">
     <option value="dashboard.html">💧 Smart Water Network Control Center</option>
